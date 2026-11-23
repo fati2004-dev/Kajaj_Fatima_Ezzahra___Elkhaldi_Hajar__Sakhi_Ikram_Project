@@ -1,0 +1,4 @@
+2026-11-23T11:20:01Z Run pytest -q
+2026-11-23T11:20:05Z FAILED tests/test_api.py::test_create_user - AssertionError: assert 201 == 200
+2026-11-23T11:20:05Z 1 failed, 14 passed in 3.42s
+2026-11-23T11:20:05Z Error: Process completed with exit code 1.

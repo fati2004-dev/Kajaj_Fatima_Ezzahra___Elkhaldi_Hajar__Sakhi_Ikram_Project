@@ -1,0 +1,3 @@
+2026-11-23T17:00:00Z Run ./custom_script.sh
+2026-11-23T17:00:02Z step 3/9 finished with unexpected status
+2026-11-23T17:00:02Z Error: Process completed with exit code 7.

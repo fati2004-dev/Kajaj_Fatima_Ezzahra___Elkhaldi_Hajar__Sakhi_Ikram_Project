@@ -1,0 +1,4 @@
+2026-11-23T14:30:00Z Deploying image app:1.4.2 to production
+2026-11-23T14:30:42Z pod/app-7d9 CrashLoopBackOff
+2026-11-23T14:31:05Z Readiness probe failed: HTTP probe failed with statuscode: 500
+2026-11-23T14:31:05Z Deployment app failed to become ready

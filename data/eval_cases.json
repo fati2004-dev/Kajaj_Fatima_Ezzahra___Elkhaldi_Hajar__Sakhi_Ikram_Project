@@ -1,0 +1,116 @@
+[
+  {
+    "id": "case-01",
+    "log": "ModuleNotFoundError: No module named 'requests'",
+    "expected_category": "missing_dependency",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-02",
+    "log": "Error: Cannot find module 'express'\nnpm ERR! exit 1",
+    "expected_category": "missing_dependency",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-03",
+    "log": "ERROR: No matching distribution found for fastapi==9.9.9",
+    "expected_category": "missing_dependency",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-04",
+    "log": "FAILED tests/test_math.py::test_add - AssertionError\n2 failed, 10 passed",
+    "expected_category": "test_failure",
+    "expected_action": "none"
+  },
+  {
+    "id": "case-05",
+    "log": "tests failed: expected 3 got 4",
+    "expected_category": "test_failure",
+    "expected_action": "none"
+  },
+  {
+    "id": "case-06",
+    "log": "KeyError: 'DATABASE_URL'",
+    "expected_category": "config_error",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-07",
+    "log": "Invalid workflow file: .github/workflows/ci.yml#L12 yaml syntax error",
+    "expected_category": "config_error",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-08",
+    "log": "Error: environment variable API_KEY is not set",
+    "expected_category": "config_error",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-09",
+    "log": "denied: requested access to the resource is denied",
+    "expected_category": "auth_error",
+    "expected_action": "none"
+  },
+  {
+    "id": "case-10",
+    "log": "fatal: Permission denied (publickey).",
+    "expected_category": "auth_error",
+    "expected_action": "none"
+  },
+  {
+    "id": "case-11",
+    "log": "HTTP 401 Unauthorized while pulling image",
+    "expected_category": "auth_error",
+    "expected_action": "none"
+  },
+  {
+    "id": "case-12",
+    "log": "curl: (7) ETIMEDOUT connecting to registry",
+    "expected_category": "timeout_network",
+    "expected_action": "rerun_job"
+  },
+  {
+    "id": "case-13",
+    "log": "Temporary failure in name resolution",
+    "expected_category": "timeout_network",
+    "expected_action": "rerun_job"
+  },
+  {
+    "id": "case-14",
+    "log": "HTTP 503 Service Unavailable from artifact server",
+    "expected_category": "timeout_network",
+    "expected_action": "rerun_job"
+  },
+  {
+    "id": "case-15",
+    "log": "pod/web-1 CrashLoopBackOff",
+    "expected_category": "deploy_failure",
+    "expected_action": "rollback"
+  },
+  {
+    "id": "case-16",
+    "log": "Readiness probe failed: connection refused",
+    "expected_category": "deploy_failure",
+    "expected_action": "rollback"
+  },
+  {
+    "id": "case-17",
+    "log": "src/x.py:3:1: E501 line too long\nFound 1 error.",
+    "expected_category": "lint_error",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-18",
+    "log": "Container OOMKilled (exit 137)",
+    "expected_category": "out_of_memory",
+    "expected_action": "open_pr"
+  },
+  {
+    "id": "case-19",
+    "log": "step finished with unexpected status\nexit code 7",
+    "expected_category": "unknown",
+    "expected_action": "none"
+  }
+]

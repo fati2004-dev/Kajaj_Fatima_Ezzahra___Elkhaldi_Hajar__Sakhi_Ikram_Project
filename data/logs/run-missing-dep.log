@@ -1,0 +1,5 @@
+2026-11-23T09:12:01Z Run pytest -q
+2026-11-23T09:12:04Z ==================== ERRORS ====================
+2026-11-23T09:12:04Z ModuleNotFoundError: No module named 'pandas'
+2026-11-23T09:12:04Z ERROR tests/test_etl.py - ModuleNotFoundError: No module named 'pandas'
+2026-11-23T09:12:04Z Error: Process completed with exit code 2.

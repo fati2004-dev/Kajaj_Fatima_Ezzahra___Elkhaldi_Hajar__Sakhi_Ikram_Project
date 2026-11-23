@@ -1,0 +1,4 @@
+2026-11-23T10:02:11Z Run pip install -r requirements.txt
+2026-11-23T10:02:41Z WARNING: Retrying after connection broken by ReadTimeoutError
+2026-11-23T10:03:11Z ERROR: Could not install packages: HTTPSConnectionPool read timed out
+2026-11-23T10:03:11Z Error: Process completed with exit code 1.

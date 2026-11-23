@@ -1,0 +1,3 @@
+2026-11-23T12:05:10Z Run python -m src.main
+2026-11-23T12:05:11Z RuntimeError: Missing required environment variable DATABASE_URL
+2026-11-23T12:05:11Z Error: Process completed with exit code 1.

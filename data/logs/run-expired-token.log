@@ -1,0 +1,3 @@
+2026-11-23T15:10:00Z Run docker push ghcr.io/team/app:latest
+2026-11-23T15:10:03Z denied: requested access to the resource is denied
+2026-11-23T15:10:03Z Error: 403 Forbidden - token=ghp_abcdefghijklmnopqrstuvwxyz123456

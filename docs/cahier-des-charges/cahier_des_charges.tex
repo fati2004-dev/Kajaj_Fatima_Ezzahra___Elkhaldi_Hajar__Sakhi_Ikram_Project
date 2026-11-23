@@ -1,0 +1,439 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,tabularx,array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+% ---------- À MODIFIER ----------
+\newcommand{\titreprojet}{Agent DevOps}
+\newcommand{\sousTitre}{Surveillance et fiabilisation de la chaîne de livraison logicielle}
+\newcommand{\membres}{Hazeel \\ \textit{[Nom du membre 2]} \\ \textit{[Nom du membre 3]}}
+\newcommand{\encadrant}{\textit{[Nom de l'enseignant]}}
+\newcommand{\annee}{2026--2027}
+\newcommand{\version}{1.0}
+\newcommand{\datedoc}{23 novembre 2026}
+% --------------------------------
+
+\definecolor{accent}{HTML}{1F4E79}
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parindent}{0pt}\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.25}
+\lstset{basicstyle=\ttfamily\footnotesize,frame=single,breaklines=true,
+        backgroundcolor=\color{gray!8},xleftmargin=4pt,xrightmargin=4pt,
+        literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ç}{{\c c}}1}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\titreprojet\ -- Cahier des charges}
+\fancyhead[R]{\small Version \version}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% ================= PAGE DE GARDE =================
+\begin{titlepage}
+\centering
+{\large École Marocaine des Sciences de l'Ingénieur (EMSI)}\\[0.2cm]
+{\normalsize Filière Informatique et Réseaux -- Parcours IA et Data -- 4\textsuperscript{e} année}\\[0.2cm]
+{\normalsize Module : IA et Développement}\\[2.5cm]
+{\color{accent}\rule{\linewidth}{1.2pt}}\\[0.5cm]
+{\Huge\bfseries\color{accent} CAHIER DES CHARGES}\\[0.4cm]
+{\LARGE \titreprojet}\\[0.3cm]
+{\large\itshape \sousTitre}\\[0.3cm]
+{\color{accent}\rule{\linewidth}{1.2pt}}\\[2cm]
+\begin{tabular}{rl}
+\textbf{Réalisé par :} & \begin{tabular}[t]{l}\membres\end{tabular} \\[0.8cm]
+\textbf{Encadrant :} & \encadrant \\[0.4cm]
+\textbf{Année universitaire :} & \annee \\[0.4cm]
+\textbf{Version / date :} & \version\ -- \datedoc
+\end{tabular}
+\vfill
+{\small Catégorie : Exploitation et infrastructure}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ================= 1 =================
+\section{Introduction et contexte}
+Dans les équipes de développement modernes, chaque modification du code traverse une chaîne
+d'intégration et de livraison continues (CI/CD) : installation des dépendances, tests, contrôle
+de qualité, construction, déploiement. Lorsqu'une étape échoue, un ingénieur doit lire des
+journaux (\emph{logs}) souvent longs et bruités, retrouver l'étape fautive, comprendre la cause,
+puis corriger ou relancer. Cette tâche répétitive consomme du temps d'exploitation et retarde les livraisons.
+
+Le projet \titreprojet{} vise à automatiser la première ligne de ce travail : un agent qui
+\textbf{observe} les pipelines, \textbf{diagnostique} les échecs, \textbf{propose} un correctif
+et, dans un cadre de sécurité strict, \textbf{agit} sur la chaîne de livraison.
+
+Ce document définit le besoin, le périmètre, les exigences, l'architecture, les choix
+technologiques, la stratégie de validation et le planning du projet. Il est réalisé dans le
+cadre du module « IA et Développement » et sert de référence pour les jalons GitHub (semaines 1 à 3).
+
+% ================= 2 =================
+\section{Problématique et objectifs}
+\subsection{Problématique}
+\emph{Comment réduire le temps de diagnostic et de reprise après un échec CI/CD, sans
+compromettre la sécurité de l'infrastructure par des actions automatiques non maîtrisées~?}
+
+\subsection{Objectif général}
+Surveiller et fiabiliser la chaîne de livraison logicielle grâce à un agent capable d'analyser les
+logs, de détecter les erreurs CI/CD, de proposer une correction et de lancer certaines actions
+automatisées sous contrôle.
+
+\subsection{Objectifs spécifiques et indicateurs de réussite}
+\begin{longtable}{>{\bfseries}p{1.2cm}p{7.3cm}p{6cm}}
+\toprule
+\textbf{ID} & \textbf{Objectif} & \textbf{Indicateur mesurable} \\
+\midrule\endhead
+O1 & Identifier correctement la cause d'un échec (catégorie et étape) & Exactitude de catégorie $\geq 85\,\%$ sur le jeu d'évaluation \\
+O2 & Recommander l'action adaptée (relance, PR, rollback, aucune) & Exactitude d'action $\geq 85\,\%$ \\
+O3 & Ne jamais exécuter d'action sensible sans validation humaine & 0 rollback exécuté sans approbation (testé) \\
+O4 & Garantir la traçabilité complète & 100\,\% des décisions et actions présentes dans le journal d'audit \\
+O5 & S'abstenir en cas de doute plutôt que de se tromper & Un log inconnu produit une abstention et une escalade \\
+O6 & Livrer un dépôt reproductible et documenté & Installation et lancement réussis sur un clone neuf \\
+\bottomrule
+\end{longtable}
+
+% ================= 3 =================
+\section{Périmètre}
+\subsection{Inclus}
+\begin{itemize}
+\item Lecture des logs de pipelines CI/CD (GitHub Actions en priorité ; mode simulé pour la démonstration).
+\item Classification des échecs : dépendance manquante, test cassé, configuration erronée, erreur
+d'authentification, échec réseau transitoire, erreur de lint, erreur de build, échec de déploiement, mémoire insuffisante.
+\item Proposition d'un correctif en langage naturel, avec les preuves extraites du log.
+\item Actions encadrées : relance d'un job, rollback d'un déploiement, ouverture d'une pull request corrective.
+\item Validation humaine pour les actions sensibles, journal d'audit, API REST et interface web.
+\end{itemize}
+\subsection{Exclus}
+\begin{itemize}
+\item Fusion automatique de code dans la branche principale.
+\item Gestion ou modification des secrets (jetons, clés) : l'agent escalade toujours vers un humain.
+\item Prise en charge de tous les fournisseurs CI/CD (extension envisagée en perspectives).
+\item Correction automatique de bugs fonctionnels complexes : l'agent propose, l'humain corrige.
+\end{itemize}
+
+% ================= 4 =================
+\section{Acteurs et besoins}
+\begin{longtable}{p{3.2cm}p{5.6cm}p{5.7cm}}
+\toprule
+\textbf{Acteur} & \textbf{Rôle} & \textbf{Besoin principal} \\
+\midrule\endhead
+Développeur & Pousse du code, subit les échecs de pipeline & Comprendre vite pourquoi le build échoue et comment corriger \\
+Ingénieur DevOps / exploitation & Responsable des déploiements & Réduire le temps de reprise, valider ou refuser les actions sensibles \\
+Responsable sécurité & Garant des règles d'accès & Garantir que l'agent reste dans ses droits et que tout est tracé \\
+Agent (système) & Analyse et agit selon les droits accordés & Décider dans le cadre de la politique de sécurité \\
+\bottomrule
+\end{longtable}
+
+% ================= 5 =================
+\section{Exigences fonctionnelles}
+Priorités selon la méthode MoSCoW : \textbf{M} (indispensable), \textbf{S} (important), \textbf{C} (souhaitable).
+\begin{longtable}{>{\bfseries}p{1.2cm}p{9.6cm}p{1.2cm}p{1.5cm}}
+\toprule
+\textbf{ID} & \textbf{Exigence} & \textbf{Prio.} & \textbf{Jalon} \\
+\midrule\endhead
+EF1 & Récupérer les logs d'un run CI/CD (par identifiant ou par texte collé) & M & S2 \\
+EF2 & Masquer les secrets présents dans les logs avant stockage, affichage ou envoi à un LLM & M & S2 \\
+EF3 & Classer l'échec par catégorie et par étape, avec un score de confiance & M & S2 \\
+EF4 & Extraire les lignes de preuve justifiant le diagnostic & M & S2 \\
+EF5 & Proposer un correctif adapté à la catégorie & M & S2 \\
+EF6 & Recommander une action : relance, PR, rollback ou aucune & M & S2 \\
+EF7 & Appliquer une politique de sécurité (risque, seuil de confiance, nombre maximal de relances) & M & S2 \\
+EF8 & Exiger une validation humaine pour toute action sensible (rollback) ou peu fiable & M & S2 \\
+EF9 & Exécuter les actions autorisées (relance, rollback, PR), avec mode simulation (\code{DRY\_RUN}) & M & S3 \\
+EF10 & Journaliser chaque décision et chaque action (qui, quand, quoi, pourquoi) & M & S2 \\
+EF11 & S'abstenir et escalader quand aucun signal fiable n'est trouvé & M & S3 \\
+EF12 & Exposer une API REST documentée (santé, analyse, incidents, approbation, audit) & M & S2 \\
+EF13 & Fournir une interface web : analyser, consulter les incidents, approuver ou rejeter & S & S2 \\
+EF14 & Générer une explication en langage naturel via un LLM (facultatif, mode dégradé sans LLM) & S & S3 \\
+EF15 & Ouvrir réellement une pull request corrective sur GitHub & C & S3 \\
+EF16 & Surveiller les déploiements en continu (interrogation périodique) & C & S3 \\
+\bottomrule
+\end{longtable}
+
+% ================= 6 =================
+\section{Exigences non fonctionnelles}
+\begin{longtable}{>{\bfseries}p{3.4cm}p{11.1cm}}
+\toprule
+\textbf{Catégorie} & \textbf{Exigence} \\
+\midrule\endhead
+Sécurité & Principe du moindre privilège ; aucun secret dans le dépôt (\code{.env} ignoré) ; secrets masqués dans les logs ; l'agent n'accède jamais aux secrets ; protection contre le \emph{path traversal} sur les identifiants de run. \\
+Traçabilité & Journal d'audit persistant et horodaté de chaque diagnostic, demande d'approbation, approbation, rejet et action. \\
+Fiabilité & Une panne du LLM ou du fournisseur CI/CD ne doit pas faire tomber l'agent : mode dégradé et erreurs explicites. \\
+Performance & Diagnostic par règles en moins de 1 seconde pour un log de 20\,000 caractères ; logs tronqués en conservant la fin. \\
+Maintenabilité & Code typé et testé, contrôle automatique (Ruff, pytest) à chaque push, règles de détection ajoutables en une entrée. \\
+Reproductibilité & Versions figées dans \path{requirements.txt}, installation en trois commandes, mode simulé sans compte externe. \\
+Utilisabilité & Interface simple : diagnostic, correctif, risque et boutons d'approbation visibles sur une seule page. \\
+Erreurs & Format d'erreur stable de l'API : \code{\{"error": \{"code", "message"\}\}}. \\
+\bottomrule
+\end{longtable}
+
+% ================= 7 =================
+\section{Cas d'usage principaux}
+\subsection{CU1 -- Échec dû à une dépendance manquante}
+\textbf{Acteur} : agent, développeur. \textbf{Déclencheur} : un job de tests échoue.
+\begin{enumerate}
+\item L'agent récupère les logs du run, masque les secrets et conserve la fin du log.
+\item Il détecte la signature « module introuvable », catégorie \code{missing\_dependency}, confiance élevée.
+\item Il propose : « ajouter la dépendance X à \path{requirements.txt} » et recommande l'ouverture d'une PR.
+\item La politique autorise l'action (risque moyen, confiance suffisante) ; la PR est ouverte (ou simulée) et tracée.
+\end{enumerate}
+\textbf{Alternative} : confiance sous le seuil, l'action passe en attente d'approbation.
+
+\subsection{CU2 -- Déploiement défaillant en production}
+\begin{enumerate}
+\item Le déploiement échoue (healthcheck, \emph{CrashLoopBackOff}).
+\item L'agent diagnostique \code{deploy\_failure} et recommande un rollback.
+\item Le rollback étant sensible, l'incident passe en \code{awaiting\_approval}.
+\item L'ingénieur DevOps approuve ou rejette dans l'interface ; la décision est tracée avec son auteur.
+\end{enumerate}
+
+\subsection{CU3 -- Échec transitoire (réseau)}
+L'agent reconnaît un délai d'attente dépassé, recommande une relance ; elle est exécutée
+automatiquement dans la limite de \code{MAX\_RETRIES}, puis une validation humaine est requise.
+
+\subsection{CU4 -- Log inconnu ou erreur d'authentification}
+Aucune signature fiable : l'agent \textbf{s'abstient}, explique pourquoi et escalade. Pour une erreur d'authentification,
+il ne tente aucune action et invite à renouveler le secret côté plateforme.
+
+% ================= 8 =================
+\section{Architecture technique}
+\subsection{Vue d'ensemble}
+L'architecture est organisée en couches : une API REST (FastAPI) expose l'agent ; l'agent
+orchestre des outils (récupération des logs, analyse, explication, politique, actions) ; un
+connecteur CI/CD abstrait le fournisseur (simulé ou GitHub) ; un journal d'audit persiste les événements.
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.9cm and 1.1cm,
+ box/.style={draw=accent,fill=accent!8,rounded corners,minimum width=2.6cm,minimum height=0.9cm,align=center,font=\small},
+ ext/.style={draw=gray,fill=gray!10,rounded corners,minimum width=2.6cm,minimum height=0.9cm,align=center,font=\small},
+ arr/.style={-{Stealth[length=2mm]},thick,color=accent}]
+\node[ext] (ui) {Interface\\React};
+\node[box,right=of ui] (api) {API FastAPI};
+\node[box,right=of api] (agent) {Agent\\(boucle)};
+\node[ext,right=of agent] (ci) {CI/CD\\GitHub Actions};
+\node[box,below=of agent] (an) {Analyseur\\règles + abstention};
+\node[box,left=of an] (pol) {Politique\\de sécurité};
+\node[ext,right=of an] (llm) {LLM\\(optionnel)};
+\node[box,below=of pol] (act) {Actions\\relance/rollback/PR};
+\node[box,below=of an] (aud) {Journal d'audit\\SQLite};
+\draw[arr] (ui) -- (api); \draw[arr] (api) -- (agent); \draw[arr] (agent) -- (ci);
+\draw[arr] (agent) -- (an); \draw[arr] (agent) -- (pol); \draw[arr] (agent) -- (llm);
+\draw[arr] (pol) -- (act); \draw[arr] (agent) to[bend left=18] (aud);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Boucle de l'agent}
+\begin{enumerate}
+\item \code{fetch\_logs} : récupération du log (run identifié ou texte fourni).
+\item \code{analyze\_logs} : masquage des secrets, troncature, détection par règles, score de confiance ; abstention si aucun signal.
+\item \code{explain\_with\_llm} (optionnel) : explication en langage naturel ; en cas d'indisponibilité, le diagnostic par règles est conservé.
+\item \code{policy} : calcul du risque et décision (automatique, validation humaine ou aucune action).
+\item Exécution de l'action ou attente d'approbation ; chaque étape est ajoutée à la trace et au journal d'audit.
+\end{enumerate}
+
+\subsection{Stratégie d'analyse en deux niveaux}
+Le premier niveau (règles) est rapide, gratuit, déterministe et testable ; il couvre les cas
+fréquents. Le second niveau (LLM) enrichit l'explication mais ne décide jamais seul d'une
+action : la décision d'agir reste du ressort de la politique de sécurité. Cette séparation
+limite les risques d'hallucination et de comportement imprévisible.
+
+% ================= 9 =================
+\section{Choix technologiques}
+\begin{longtable}{p{2.6cm}p{3.6cm}p{8.3cm}}
+\toprule
+\textbf{Domaine} & \textbf{Choix} & \textbf{Justification} \\
+\midrule\endhead
+Langage backend & Python 3.12 & Écosystème IA, lisibilité, tests rapides à écrire. \\
+API & FastAPI + Pydantic & Validation automatique, documentation interactive \code{/docs}, typage fort. \\
+Serveur & Uvicorn & Serveur ASGI standard pour FastAPI. \\
+Client HTTP & httpx & Appels GitHub et LLM, délais d'attente configurables, testable. \\
+Analyse des logs & Expressions régulières (règles) & Déterministe, explicable, sans entraînement ; extensible. \\
+IA générative & API d'un LLM (Claude) via HTTP & Explication et suggestion en langage naturel ; facultatif et remplaçable. \\
+CI/CD & GitHub Actions & Dépôt déjà sur GitHub, API de logs, relance et \emph{workflow\_dispatch} pour le rollback. \\
+Persistance & SQLite (bibliothèque standard) & Aucune installation, suffisant pour le journal d'audit. \\
+Frontend & React + Vite & Démarrage rapide, composants simples, proxy de développement vers l'API. \\
+Tests et qualité & pytest, Ruff, GitHub Actions & Tests automatiques et contrôle de style à chaque push. \\
+Conteneurs (option) & Docker & Packaging et exécution reproductible si le temps le permet. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Alternatives écartées.} LangChain/LangGraph (dépendance lourde pour une boucle simple),
+entraînement d'un modèle de classification (jeu de données insuffisant en une semaine),
+PostgreSQL (surdimensionné), Jenkins (installation lourde).
+
+% ================= 10 =================
+\section{Politique de sécurité des actions}
+\begin{longtable}{p{3cm}p{1.8cm}p{9.7cm}}
+\toprule
+\textbf{Action} & \textbf{Risque} & \textbf{Règle appliquée} \\
+\midrule\endhead
+\code{rerun\_job} & Faible & Automatique si confiance $\geq$ seuil et relances $<$ \code{MAX\_RETRIES} ; sinon validation humaine. \\
+\code{open\_pr} & Moyen & Automatique si confiance $\geq$ seuil ; la PR est relue par un humain, jamais fusionnée par l'agent. \\
+\code{rollback} & Élevé & Validation humaine \textbf{toujours} obligatoire. \\
+Secrets, authentification & -- & Aucune action : escalade vers un humain. \\
+Confiance sous le seuil & -- & Toute action passe en validation humaine. \\
+\bottomrule
+\end{longtable}
+Mesures complémentaires : mode simulation \code{DRY\_RUN} activé par défaut ; option \code{AUTO\_ACTIONS}
+pour désactiver toute action automatique ; jeton GitHub aux droits minimaux ; masquage des secrets ;
+journal d'audit consultable ; identifiants de run assainis.
+
+% ================= 11 =================
+\section{Modèle de données et API}
+\subsection{Données principales}
+\begin{longtable}{p{3cm}p{11.5cm}}
+\toprule
+\textbf{Objet} & \textbf{Champs principaux} \\
+\midrule\endhead
+Diagnostic & catégorie, étape, confiance, explication, correctif proposé, action recommandée, preuves, abstention \\
+Décision & risque, action automatique autorisée, validation requise, raison \\
+Incident & identifiant, date, run, environnement, diagnostic, décision, statut, explication LLM, trace des outils, résultat d'action \\
+Événement d'audit & horodatage, incident, acteur, événement, détails \\
+\bottomrule
+\end{longtable}
+Statuts d'un incident : \code{resolved\_auto}, \code{awaiting\_approval}, \code{executed}, \code{rejected}, \code{no\_action}.
+
+\subsection{Routes de l'API}
+\begin{longtable}{p{4.7cm}p{9.8cm}}
+\toprule
+\textbf{Route} & \textbf{Rôle} \\
+\midrule\endhead
+\code{GET /health} & État du service et mode courant \\
+\code{GET /runs} & Liste des runs disponibles \\
+\code{POST /analyze} & Analyse d'un run (\code{run\_id}) ou d'un log (\code{log\_text}) \\
+\code{GET /incidents}, \code{GET /incidents/\{id\}} & Consultation des incidents \\
+\code{POST /incidents/\{id\}/approve} et \code{/reject} & Validation humaine \\
+\code{GET /audit} & Journal d'audit \\
+\bottomrule
+\end{longtable}
+
+% ================= 12 =================
+\section{Stratégie de tests et d'évaluation}
+\subsection{Tests automatisés}
+Tests unitaires de l'analyseur (catégories, abstention, log vide ou très long, masquage des secrets),
+de la politique de sécurité (seuils, rollback, limite de relances) et de l'API (statuts, format
+d'erreur, validation humaine, journal d'audit, \emph{path traversal}). Les tests s'exécutent à chaque push via l'intégration continue.
+
+\subsection{Jeu d'évaluation}
+Un jeu de 15 à 20 cas (log, catégorie attendue, action attendue) est versionné dans \path{data/eval_cases.json}.
+Le script \path{scripts/evaluate.py} calcule l'exactitude de catégorie et d'action et écrit le résultat dans \path{docs/evaluation.md}.
+Les cas initiaux seront complétés par des logs réels issus des dépôts du groupe afin de limiter le biais d'un jeu écrit par les concepteurs.
+
+\subsection{Critères de réussite}
+\begin{itemize}
+\item Exactitude de catégorie et d'action $\geq 85\,\%$ sur le jeu d'évaluation.
+\item Aucune action sensible exécutée sans validation (vérifié par test).
+\item Journal d'audit complet pour 100\,\% des incidents.
+\item Cas limites couverts : log vide ou trop long, fournisseur indisponible, confiance faible (abstention).
+\end{itemize}
+
+% ================= 13 =================
+\section{Organisation et planning}
+\subsection{Workflow Git}
+Une branche par jalon (par exemple \code{s2-3-api}), pull request relue par un autre membre, fusion
+dans \code{main} uniquement si les tests passent ; messages de commit de la forme
+\code{S2-3 : ajouter la route principale et ses tests} ; un tag par étape (\code{s1}, \code{s2}, \code{v1.0.0}) ;
+chaque membre est auteur principal d'au moins un jalon par étape, depuis son compte personnel.
+
+\subsection{Planning sur une semaine}
+Le planning ci-dessous condense les trois semaines de référence en sept jours ; les 18 jalons
+et les trois tags sont conservés. \emph{Ce rythme doit être confirmé avec l'enseignant.}
+\begin{longtable}{p{2.7cm}p{8cm}p{3.8cm}}
+\toprule
+\textbf{Jour} & \textbf{Travail} & \textbf{Jalons} \\
+\midrule\endhead
+Lun. 23/11 & Cahier des charges, dépôt, environnement, squelette, données, architecture, fiche 1 & S1-1 à S1-6, tag \code{s1} \\
+Mar. 24/11 & Cœur de l'agent (boucle, deux outils) et jeu d'évaluation & S2-1, S2-2 \\
+Mer. 25/11 & API (santé, analyse, erreurs stables, tests) & S2-3 \\
+Jeu. 26/11 & Interface reliée à l'API, intégration continue (tests, Ruff) & S2-4, S2-5 \\
+Ven. 27/11 & Fiche 2, README à jour, tag \code{s2} & S2-6 \\
+Sam. 28/11 & Cas limites, évaluation finale, installation sur clone neuf & S3-1 à S3-3 \\
+Dim. 29/11 & Documentation, compte rendu, support de soutenance, release & S3-4 à S3-6, tag \code{v1.0.0} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Répartition indicative}
+\begin{longtable}{p{3.5cm}p{11cm}}
+\toprule
+\textbf{Rôle} & \textbf{Responsabilités} \\
+\midrule\endhead
+Backend et agent & Analyseur, politique de sécurité, actions, connecteur CI/CD, audit \\
+API et qualité & Routes, validation, tests, intégration continue, évaluation \\
+Frontend et documentation & Interface React, README, schémas, compte rendu et soutenance \\
+\bottomrule
+\end{longtable}
+Les rôles seront ajustés selon la taille du groupe ; chacun reste auteur d'au moins un jalon par étape.
+
+% ================= 14 =================
+\section{Risques et mitigations}
+\begin{longtable}{p{4.2cm}p{1.8cm}p{8.5cm}}
+\toprule
+\textbf{Risque} & \textbf{Gravité} & \textbf{Mitigation} \\
+\midrule\endhead
+Délai d'une semaine trop court & Élevée & Squelette fourni, périmètre « M » d'abord, fonctionnalités « C » en dernier \\
+Action automatique dangereuse & Élevée & Politique stricte, \code{DRY\_RUN} par défaut, validation humaine, tests dédiés \\
+Fuite d'un secret dans le dépôt ou le log & Élevée & \code{.gitignore}, \code{.env.example}, masquage, remplacement immédiat de toute clé poussée \\
+Hallucination du LLM & Moyenne & LLM limité à l'explication ; décision par règles et politique \\
+Indisponibilité de GitHub ou du LLM & Moyenne & Mode simulé, mode dégradé, erreurs explicites \\
+Jeu d'évaluation biaisé & Moyenne & Ajouter de vrais logs du groupe, documenter les limites \\
+Conflits Git dans l'équipe & Faible & Une branche par jalon, revue croisée, \code{main} toujours exécutable \\
+\bottomrule
+\end{longtable}
+
+% ================= 15 =================
+\section{Livrables}
+\begin{itemize}
+\item Dépôt GitHub complet : code, tests, intégration continue, historique montrant la contribution de chacun.
+\item README : objectif, installation, lancement, exemples, limites.
+\item Documentation : architecture, évaluation, \code{CHANGELOG.md}, fiches de suivi des trois semaines.
+\item Compte rendu de projet et support de soutenance.
+\item Version finale étiquetée \code{v1.0.0} avec notes de version.
+\end{itemize}
+
+% ================= 16 =================
+\section{Perspectives}
+Prise en charge d'autres fournisseurs (GitLab CI, Jenkins), ouverture réelle de PR avec correctif
+généré et testé, apprentissage à partir des incidents passés, notification (Slack, e-mail),
+tableau de bord de fiabilité (taux d'échec, temps moyen de reprise).
+
+\appendix
+\section{Structure du dépôt}
+\begin{lstlisting}
+agent-devops/
+|-- README.md  requirements.txt  .env.example  .gitignore  CHANGELOG.md
+|-- .github/workflows/ci.yml
+|-- src/        main.py agent.py analyzer.py policy.py actions.py
+|               cicd.py llm.py audit.py schemas.py config.py
+|-- tests/      test_analyzer.py test_policy.py test_api.py
+|-- data/       logs/ (runs d'exemple)  eval_cases.json
+|-- scripts/    evaluate.py
+|-- docs/       architecture.md evaluation.md equipe.md suivi/ cahier-des-charges/
+`-- frontend/   package.json vite.config.js src/App.jsx
+\end{lstlisting}
+
+\section{Glossaire}
+\begin{description}[leftmargin=3.2cm,style=nextline]
+\item[CI/CD] Intégration continue et livraison/déploiement continus.
+\item[Rollback] Retour à la dernière version saine déployée.
+\item[Pull request] Proposition de modification de code soumise à relecture.
+\item[LLM] Grand modèle de langage.
+\item[Dry-run] Mode simulation : l'action est décrite mais pas exécutée.
+\item[Abstention] Refus de conclure quand le signal est insuffisant.
+\end{description}
+
+\end{document}
